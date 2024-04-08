@@ -1,0 +1,50 @@
+version: '3'
+
+
+services:
+  nodejs_p:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nodejs
+    container_name: nodejs_p
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MONGO_USERNAME=$MONGO_USERNAME
+      - MONGO_PASSWORD=$MONGO_PASSWORD
+      - MONGO_HOSTNAME=db
+      - MONGO_PORT=$MONGO_PORT
+      - MONGO_DB=$MONGO_DB
+    ports:
+      - "11800:8080"
+    volumes:
+      - .:/home/node/app_palomino
+      - node_modules:/home/node/app_palomino/node_modules
+    networks:
+      - app-networkp
+    command: ./wait-for.sh db:27017 -- /home/node/app_palomino/node_modules/.bin/nodemon app.js
+
+
+  db:
+    image: mongo:4.1.8-xenial
+    container_name: db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGO_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_PASSWORD
+    volumes:     
+      - dbdatap:/data/db
+    networks:
+      - app-networkp 
+
+
+networks:
+  app-networkp:
+    driver: bridge
+
+
+volumes:
+  dbdatap:
+  node_modules:
